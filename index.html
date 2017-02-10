@@ -6,11 +6,14 @@
 <link rel="stylesheet" href="style.css">
 </head>
 
-<body>
+<body onload="init()">
 
-<svg class="chart"></svg>
+	<div id="chart" class="center"
+		style="text-align: center; box-shadow: 10px 10px 5px #888888; background-color: #FFF;">
+		<div id="legend" class="legend"></div>
+	</div>
 
-<script src="d3.js"></script>
+<script src="d3.min.js"></script>
 <script src="code.js"></script>
 
 </body>
