@@ -14,7 +14,7 @@ var xAxisType;
 var names = [], heights = [], weights = [], HRs = [];
 var decreaseBins = false;
 var extraCredit = false, pX, nX, drawn = false;
-function makeBarChart() {
+function initHistogram() {
 	d3.select('#bartooltip').remove();
 	d3.select('#mainchart').remove();
 	d3.select('#piechart').remove();
@@ -99,7 +99,7 @@ function makeBarChart() {
 				d3.select('#mainchart').remove();
 				d3.select('#chart').on('clik', null);
 				drawn = false;
-				makeBarChart();
+				initHistogram();
 			}
 		}).mouseout(function(e) {
 			nX = 0;
@@ -117,7 +117,7 @@ function makeBarChart() {
 			d3.select('#bartooltip').remove();
 			d3.select('#mainchart').remove();
 			d3.select('#chart').on('clik', null);
-			makeBarChart();
+			initHistogram();
 		});
 
 		var group = container.append('g').attr('transform',
@@ -214,11 +214,11 @@ function makeBarChart() {
 
 		vGuide.selectAll('line').style('stroke', strokeColor);
 
-		document.getElementById("xAxisText").innerHTML = xAxisType;
+		document.getElementById("chart_type").innerHTML = xAxisType;
 	});
 }
 
-function makePieChart() {
+function initPieChart() {
 	names = [];
 	heights = [];
 	weights = [];
@@ -299,7 +299,7 @@ function makePieChart() {
 		d3.select('#chart').on('click', function() {
 			chartIndex = chartIndex + 1;
 			d3.select('#piechart').remove();
-			makePieChart();
+			initPieChart();
 		});
 		var svg = d3.select('#chart').append('svg').attr('id', 'piechart')
 				.attr('width', pieWidth + 50).attr('height', pieHeight);
@@ -325,11 +325,11 @@ function makePieChart() {
 		}).style('fill', pieDataColor).style('text-anchor', pieTextAlign)
 				.style('font-family', fontFamily);
 
-		document.getElementById("xAxisText").innerHTML = xAxisType;
+		document.getElementById("chart_type").innerHTML = xAxisType;
 	});
 }
 
-function makeForceChart() {
+function initForceChart() {
 	var forceWidth = 950, forceHeight = 450;
 	d3.select('#bartooltip').remove();
 	d3.select('#mainchart').remove();
@@ -441,7 +441,7 @@ function makeForceChart() {
 			chartIndex = chartIndex + 1;
 			d3.select('#chart').on('click', null);
 			d3.select('#forcechart').remove();
-			makeForceChart();
+			initForceChart();
 		}).append('svg').attr('id', 'forcechart').attr('width', forceWidth)
 				.attr('height', forceHeight);
 
@@ -494,7 +494,7 @@ function makeForceChart() {
 			});
 		});
 		forceLayout.start();
-		document.getElementById("xAxisText").innerHTML = xAxisType;
+		document.getElementById("chart_type").innerHTML = xAxisType;
 	});
 }
 
@@ -503,6 +503,6 @@ function doExtraCredit() {
 	document.getElementById("extraCreditButton").value = extraCredit ? "StopExtraCredit"
 			: "ExtraCredit-Bins";
 	if(extraCredit) {
-		makeBarChart();
+		initHistogram();
 	}
 }

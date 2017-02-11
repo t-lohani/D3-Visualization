@@ -3,11 +3,80 @@ body {
 	background-color: #000;
 }
 
-.center {
-	margin: auto;
-	width: 1000px;
-	height: 80%;
-	padding: 10px;
+.header {
+	color: #FFFFFF;
+	font-size: 30px;
+	margin: 1px
+}
+
+.chart_menu_container {
+	overflow: auto;
+	margin-top: 20px;
+	margin-bottom: 20px;
+}
+
+.chart_layout {
+	width: 90%;
+	text-align: center;
+	float: left;
+}
+
+.legend_area {
+	
+}
+
+.menu_layout {
+	
+}
+
+.menu_button {
+	width: 100px;
+	height: 33px;
+	color: #FFFFFF;
+	font-size: 20px;
+	text-align: left;
+	border: none;
+	margin-bottom: 20px;
+	background-image: url("menu.png");
+	background-repeat: no-repeat;
+}
+
+.menu_item {
+	width: 100px;
+	height: 100px;
+	margin: 5px;
+	-webkit-animation-name: slideInDown;
+	-webkit-animation-duration: 1s;
+}
+
+
+@keyframes slideInDown {
+  from {
+    transform: translate3d(0, -100%, 0);
+    visibility: visible;
+  }
+
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes slideOutUp {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+
+  to {
+    visibility: hidden;
+    transform: translate3d(0, -100%, 0);
+  }
+}
+
+.chart_type {
+	width: 1200px;
+	text-align: center;
+	color: #5090A0;
+	font-size: 20px;
 }
 
 .button {
