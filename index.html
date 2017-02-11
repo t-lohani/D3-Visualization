@@ -1,20 +1,52 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-<meta charset="utf-8"/>
+<meta charset="UTF-8">
 <link rel="stylesheet" href="style.css">
+<title>CSE 564 Mini Project #1</title>
 </head>
-
-<body onload="init()">
-
-	<div id="chart" class="center"
-		style="text-align: center; box-shadow: 10px 10px 5px #888888; background-color: #FFF;">
-		<div id="legend" class="legend"></div>
+<body onload="makeBarChart()">
+	<div style="text-align: center;">
+		<p style="color: #FFFFFF; font-size: 30px">CSE 564 Mini Project #1</p>
 	</div>
-
-<script src="d3.min.js"></script>
-<script src="code.js"></script>
-
+	<div>
+		<div style="width: 50px; float: left;">
+			<table>
+				<tr>
+					<td><img id="barChartButton" src="height.png"
+						width="100px" height="100px" name='Bar'
+						style="float: left; margin: 0px 0px 10px 42px;" class="button"
+						onclick="makeBarChart()" /></td>
+				</tr>
+				<tr>
+					<td><img id="pieChartButton" src="weight.png"
+						width="100px" height="100px" name='Pie'
+						style="float: left; margin: 0px 0px 10px 42px;" class="button"
+						onclick="makePieChart()" /></td>
+				</tr>
+				<tr>
+					<td><img id="forceLayoutButton" src="heartrate.png"
+						width="100px" height="100px" name="Force"
+						style="display: block; float: left; margin: 0px 0px 10px 42px;"
+						class="button" onclick="makeForceChart()" /></td>
+				</tr>
+				<tr>
+					<td><input id="extraCreditButton" type="button" width="100px"
+						height="64px" value="ExtraCredit-Bins" class='button'
+						style="display: block; margin: 0px 0px 10px 42px; padding-top: 28px; padding-bottom: 28px;"
+						onclick="doExtraCredit()" /></td>
+				</tr>
+			</table>
+		</div>
+		<div id="chart" class="center"
+			style="text-align: center; box-shadow: 10px 10px 5px #888888; background-color: #000;">
+			<div id="legend" class="legend"></div>
+		</div>
+	</div>
+	<div id="xAxisText"
+		style="text-align: center; color: #5090A0; padding-top: 30px; font-size: 20px;"></div>
+	<script src="d3.min.js"></script>
+	<script src="code.js"></script>
+	<script src="jquery.min.js"></script>
 </body>
 </html>
