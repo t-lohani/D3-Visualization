@@ -5,17 +5,17 @@
 <link rel="stylesheet" href="style.css">
 <title>CSE 564 Mini Project #1</title>
 </head>
-<body onload="initHistogram()">
+<body onload="init_chart()">
 	<div style="text-align: center;">
 		<p class = "header">CSE 564 Mini Project #1</p>
 	</div>
 	<div style="text-align: center;">
-		<p class = "header">Census of Baseball Players</p>
+		<p class = "sub_header">Census of Baseball Players</p>
 	</div>
 	
 	<div id="chart_menu_container" class="chart_menu_container">
 		<div id="chart" class="chart_layout">
-			<div id="legend" class="legend_area"></div>
+			<div id="legend_area" class="legend_area"></div>
 		</div>
 
 		<div id="menu" class="menu_layout">
@@ -25,20 +25,20 @@
 						<td><button id="menu_btn" class="menu_button"/>MENU</button></td>
 					</tr>
 					<tr>
-						<td><img id="height_btn" class="menu_item" src="height_icon.png" onclick="initHistogram()"/></td>
+						<td><img id="height_btn" class="menu_item" src="height_icon.png" onclick="changeChartType(1)"/></td>
 					</tr>
 					<tr>
-						<td><img id="weight_btn" class="menu_item" src="weight_icon.png" onclick="initPieChart()"/></td>
+						<td><img id="weight_btn" class="menu_item" src="weight_icon.png" onclick="changeChartType(2)"/></td>
 					</tr>
 					<tr>
-						<td><img id="hr_btn" class="menu_item" src="heartrate_icon.png" onclick="initForceChart()" /></td>
+						<td><img id="hr_btn" class="menu_item" src="heartrate_icon.png" onclick="changeChartType(3)" /></td>
 					</tr>
 				</table>
 			</div>
 		</div>
 	</div>
 	
-	<div id="chart_type" class="chart_type"></div>
+	<div id="census_text" class="census_text"></div>
 	
 	<script src="d3.min.js"></script>
 	<script src="code.js"></script>
