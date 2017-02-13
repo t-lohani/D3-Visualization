@@ -56,6 +56,7 @@ function toggle_menu() {
 }
 
 function reset() {
+	chart_type = 1;
 	census_type = 1;
 	init_chart();
 }
@@ -82,7 +83,7 @@ function initHistogram() {
 				census_text = "Baseball players' heights";
 				return parseInt(i.height);
 			} else if (chart_type == 2) {
-				bin_count = 21;
+				bin_count = 20;
 				census_text = "Baseball players' weights";
 				return parseInt(i.weight);
 			} else if (chart_type == 3) {
@@ -107,10 +108,14 @@ function initHistogram() {
 		var max = d3.max(hist_bin_data.map(function(i) {
 			return d3.max(i);
 		}));
-		
-		//console.log("Tarun", min);
-		//console.log("Tarun", max);
 
+		var step = (max - min) / bin_count;
+		bar_padding = step*0.1;
+		
+		//console.log("Tarun", "Min : " + min);
+		//console.log("Tarun", "Max : " + max);
+		//console.log("Tarun", "Step : " + step);
+		
 		// Setting y range by getting the maximum bar height
 		var y = d3.scale.linear()
 				.domain([0, 20 + d3.max(hist_bin_data.map(function(i) {return i.length;}))])
@@ -118,7 +123,7 @@ function initHistogram() {
 
 		// Setting x range by getting the minimum and maximu height values
 		var x = d3.scale.linear()
-				.domain([ min, max + 1 ])
+				.domain([ min, max + 2*step ])
 				.range([ 0, width ]);
 
 		var svg = d3.select('#chart')
@@ -127,22 +132,24 @@ function initHistogram() {
 					.attr('height', height + padding)
 					.attr('width', width);
 
-		var container = svg.append('g').attr('transform', 'translate(50,0)');
+		var container = svg.append('g').attr('transform', 'translate(50, -15)');
 		
 		// Setting y axis text
 		container.append('text')
 				 .text('Number of people')
 				 .attr('id', 'yaxis_text')
 				 .attr("text-anchor", "middle")
-				 .attr("transform", "translate(-40," + (height / 2) + ")rotate(-90)")
-				 .style('color', '#FFF');
+				 .attr("transform", "translate(-30," + (height / 2) + ")rotate(-90)")
+				 .style('stroke', '#FFF');
 
 		d3.select('#chart').on('click', function() {
 			census_type = 2;
 			bartooltip.html('');
 			d3.select('#bartooltip').remove();
 			init_chart();
-		});
+		});	
+		
+		//d3.select('#chart').on('click', null);
 		
 		// Making x axis
 		var x_axis = d3.svg.axis()
@@ -151,11 +158,12 @@ function initHistogram() {
 		
 		// Initializing X axis container and appending x-axis
 		var group = container.append('g')
-							 .attr('transform', 'translate(0,' + height + ')')
+							 .attr('transform', 'translate(20,' + height + ')')
 							 .call(x_axis);
 
 		group.selectAll('path').style('fill', 'none').style('stroke', stroke_color);
 		group.selectAll('line').style('stroke', stroke_color);
+		group.selectAll('text').style('stroke', stroke_color);
 
 		// Adding histogram bin data to SVG
 		var units = container.selectAll('.bar').data(hist_bin_data).enter().append('g');
@@ -173,7 +181,7 @@ function initHistogram() {
 		//console.log("Tarun", units);
 		// Appending rectangles in histogram
 		units.append('rect')
-			 .attr('x', function(d) {return x(d.x + bar_padding);})
+			 .attr('x', function(d) {return x(d.x + bar_padding) + 20;})
 			 .attr('y', height)
 			 .attr('width', function(d) {return x(min + d.dx - bar_padding*2);})
 			 .attr('height', 0)
@@ -192,7 +200,7 @@ function initHistogram() {
 						  
 				bartooltip.html(d.y)
 						  .style('left', (d3.event.pageX - 15) + 'px')
-						  .style('top', (height - y(d.y) + 50) + 'px');
+						  .style('top', (height - y(d.y) + 35) + 'px');
 				
 				orig_width = d3.select(this).attr('width');
 				orig_height = d3.select(this).attr('height');
@@ -200,10 +208,10 @@ function initHistogram() {
 				orig_ypos = d3.select(this).attr('y');
 				
 				d3.select(this).attr('x', function(d) {
-					return x(d.x) - bar_padding;
+					return x(d.x - bar_padding/2) + 20;
 				});
 				d3.select(this).attr('width', function(d) {
-					return x(min + d.dx) + bar_padding*2;
+					return x(min + d.dx + bar_padding);
 				})
 				d3.select(this).attr('y', function(d) {
 					return height - y(d.y) - bar_height_bulge;
@@ -252,11 +260,12 @@ function initHistogram() {
 		// 
 		var vert_guide = d3.select('svg')
 						   .append('g')
-						   .attr('transform', 'translate(50,0)')
+						   .attr('transform', 'translate(70, -15)')
 						   .call(vert_axis);
 
 		vert_guide.selectAll('path').style('fill', 'none').style('stroke', stroke_color);
 		vert_guide.selectAll('line').style('stroke', stroke_color);
+		vert_guide.selectAll('text').style('stroke', stroke_color);
 
 		document.getElementById("census_text").innerHTML = census_text;
 	});
@@ -275,7 +284,7 @@ function initPieChart() {
 				census_text = "Baseball players' heights";
 				return parseInt(i.height);
 			} else if (chart_type == 2) {
-				bin_count = 21;
+				bin_count = 20;
 				type_text = "Weight";
 				census_text = "Baseball players' weights";
 				return parseInt(i.weight);
@@ -382,7 +391,7 @@ function initForceChart() {
 				census_text = "Baseball players' heights";
 				return parseInt(i.height);
 			} else if (chart_type == 2) {
-				bin_count = 21;
+				bin_count = 20;
 				type_text = "Weight";
 				census_text = "Baseball players' weights";
 				return parseInt(i.weight);
