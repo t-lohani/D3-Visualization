@@ -31,14 +31,11 @@ body {
 	width: 15%;
 	float: left;
 	font-size: 10px;
+	text-align: left;
 	display: none; width : 200px; height : 80px;
 	color: #A0A0A0;
 	width: 200px;
 	height: 80px;
-}
-
-.menu_layout {
-	
 }
 
 .menu_button {
@@ -53,10 +50,21 @@ body {
 	background-repeat: no-repeat;
 }
 
+.reset_button {
+	width: 100px;
+	height: 33px;
+	color: #FFFFFF;
+	font-size: 20px;
+	text-align: center;
+	border: none;
+	background-color: #000000;
+}
+
 .menu_item {
 	width: 100px;
 	height: 100px;
 	margin: 5px;
+	display: none;
 	-webkit-animation-name: slideInDown;
 	-webkit-animation-duration: 1s;
 }
@@ -64,7 +72,7 @@ body {
 
 @keyframes slideInDown {
   from {
-    transform: translate3d(0, -100%, 0);
+    transform: translate3d(0, -25%, 0);
     visibility: visible;
   }
 
@@ -73,19 +81,7 @@ body {
   }
 }
 
-@keyframes slideOutUp {
-  from {
-    transform: translate3d(0, 0, 0);
-  }
-
-  to {
-    visibility: hidden;
-    transform: translate3d(0, -100%, 0);
-  }
-}
-
 .census_text {
-	width: 1350px;
 	text-align: center;
 	color: #FFF;
 	font-size: 20px;

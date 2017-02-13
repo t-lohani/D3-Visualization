@@ -1,17 +1,20 @@
 var width = 1000;
 var height = 450;
 var padding = 10;
-var height_data = [], weight_data = [], hr_data = [];
 
-var bin_count;
 var stroke_color = '#FFF';
-var bar_color = '#4682b4'
-var bar_highlight_color = '#00008B'
 var census_type = 1;
 var census_text;
 var chart_type = 1;
 var type_text;
 var compressed_data = [];
+
+var bin_count;
+var bar_color = '#4682b4'
+var bar_highlight_color = '#00008B'
+var bar_padding = 0.1;
+var bar_height_bulge = 3;
+
 
 var pie_width = 500;
 var pie_height = 500;
@@ -19,6 +22,8 @@ var pie_radius = 250;
 
 var force_width = 950;
 var force_height = 450;
+
+var menu_visible = false;
 
 function init_chart() {
 	destroy();
@@ -36,11 +41,26 @@ function changeChartType(value) {
 	init_chart();
 }
 
+function toggle_menu() {
+	if (menu_visible) {
+		menu_visible = false;
+		document.getElementById('height_btn').style.display = 'none';
+		document.getElementById('weight_btn').style.display = 'none';
+		document.getElementById('hr_btn').style.display = 'none';
+	} else {
+		menu_visible = true;
+		document.getElementById('height_btn').style.display = 'block';
+		document.getElementById('weight_btn').style.display = 'block';
+		document.getElementById('hr_btn').style.display = 'block';		
+	}
+}
+
+function reset() {
+	census_type = 1;
+	init_chart();
+}
+
 function destroy() {
-	
-	height_data = [];
-	weight_data = [];
-	hr_data = [];
 	
 	d3.select('#bartooltip').remove();
 	d3.select('#chart_layout').remove();
@@ -57,10 +77,6 @@ function initHistogram() {
 
 		// Storing the height/weight/hr data as baseball_data
 		var baseball_data = data.map(function(i) {
-			height_data.push(i.height);
-			weight_data.push(i.weight);
-			hr_data.push(i.HR);
-			
 			if (chart_type == 1) {
 				bin_count = 15;
 				census_text = "Baseball players' heights";
@@ -123,6 +139,8 @@ function initHistogram() {
 
 		d3.select('#chart').on('click', function() {
 			census_type = 2;
+			bartooltip.html('');
+			d3.select('#bartooltip').remove();
 			init_chart();
 		});
 		
@@ -155,9 +173,9 @@ function initHistogram() {
 		//console.log("Tarun", units);
 		// Appending rectangles in histogram
 		units.append('rect')
-			 .attr('x', function(d) {return x(d.x);})
+			 .attr('x', function(d) {return x(d.x + bar_padding);})
 			 .attr('y', height)
-			 .attr('width', function(d) {return x(min + d.dx);})
+			 .attr('width', function(d) {return x(min + d.dx - bar_padding*2);})
 			 .attr('height', 0)
 			 .attr('margin', 5)
 			 .attr('fill', bar_color)
@@ -182,16 +200,16 @@ function initHistogram() {
 				orig_ypos = d3.select(this).attr('y');
 				
 				d3.select(this).attr('x', function(d) {
-					return x(d.x) - 10;
+					return x(d.x) - bar_padding;
 				});
 				d3.select(this).attr('width', function(d) {
-					return x(min + d.dx) + 10;
+					return x(min + d.dx) + bar_padding*2;
 				})
 				d3.select(this).attr('y', function(d) {
-					return height - y(d.y) - 10;
+					return height - y(d.y) - bar_height_bulge;
 				});
 				d3.select(this).attr('height', function(d) {
-					return y(d.y) + 10;
+					return y(d.y) + bar_height_bulge;
 				});
 			 })
 			 .on('mouseout', function(d) {
@@ -251,10 +269,6 @@ function initPieChart() {
 		
 		// Storing the height/weight/hr data as baseball_data
 		var baseball_data = data.map(function(i) {
-			height_data.push(i.height);
-			weight_data.push(i.weight);
-			hr_data.push(i.HR);
-			
 			if (chart_type == 1) {
 				bin_count = 15;
 				type_text = "Height";
@@ -298,18 +312,16 @@ function initPieChart() {
 		for (var i = 0; i < bin_count; i++) {
 			next = previous + step;
 			legend = legend + "<li>" + compressed_data[i] + " ("
-					+ parseFloat(previous).toFixed(3) + " - "
-					+ parseFloat(next).toFixed(3) + ")</li>";
+					+ parseFloat(previous).toFixed(0) + " - "
+					+ parseFloat(next).toFixed(0) + ")</li>";
 			previous = next;
 		}
 		legend = legend + "</ul>";
 
 		document.getElementById('legend_area').style.display = 'block';
 		document.getElementById('legend_area').innerHTML = legend;
-
-		var colors = d3.scale.ordinal()
-					   .domain([ 0, compressed_data.length ])
-					   .range(['#0075B4', '#70B5DC']);
+					   
+		var colors = d3.scale.category20();
 
 		var arc = d3.svg.arc().outerRadius(pie_radius).innerRadius(0);
 		var pie_chart = d3.layout.pie().value(function(d) {return d;});
@@ -360,16 +372,10 @@ function initPieChart() {
 
 function initForceChart() {
 	
-	//d3.select('#chart').on('click', null);
-
 	d3.csv('baseball_data.csv', function(data) {
 		
 		// Storing the height/weight/hr data as baseball_data
 		var baseball_data = data.map(function(i) {
-			height_data.push(i.height);
-			weight_data.push(i.weight);
-			hr_data.push(i.HR);
-			
 			if (chart_type == 1) {
 				bin_count = 15;
 				type_text = "Height";
@@ -412,17 +418,17 @@ function initForceChart() {
 		});
 		
 		var legend = "";
-		legend = legend + "Number of people (" + type_text + " Range)" + "<ul>";
+		legend = "Number of people (" + type_text + " Range)" + "<ul>";
 		for (var i = 0; i < bin_count; i++) {
 			next = previous + step;
 			nodes.push({
 				name : compressed_data[i],
 				value : compressed_data[i],
-				target : [ 0 ]
+				target : [0]
 			})
-			legend = legend + "<li>" + compressed_data[i] + " ("
-					+ parseFloat(previous).toFixed(3) + " - "
-					+ parseFloat(next).toFixed(3) + ")</li>";
+			legend = legend +  "<li>" + compressed_data[i] + " ("
+					+ parseFloat(previous).toFixed(0) + " - "
+					+ parseFloat(next).toFixed(0) + ")</li>";
 			previous = next;
 		}
 		legend = legend + "</ul>";
@@ -444,17 +450,14 @@ function initForceChart() {
 							.linkStrength(0.3)
 							.friction(0.9)
 							.linkDistance(100)
-							.charge(-200)
+							.charge(-300)
 							.gravity(0.1)
 							.theta(0.8)
 							.alpha(0.1)
 							.size([force_width, force_height]);
 
 		var container = d3.select('#chart')
-						  .on('click', function() {
-								census_type = 1;
-								init_chart();
-						  })
+						  .on('click', null)
 						  .append('svg')
 						  .attr('id', 'forcechart_layout')
 						  .attr('width', force_width)
@@ -468,25 +471,29 @@ function initForceChart() {
 							.on('click', null)
 							.data(nodes)
 							.enter()
-							.append('g').
-							call(force_chart.drag);
+							.append('g')
+							.call(force_chart.drag);
 
 		var link = container.selectAll('line')
 							.data(links)
 							.enter()
 							.append('line')
 							.style('stroke', '#FFF')
-							.style("stroke-width", function(d) {return 1;});
+							.style("stroke-width", 1);
 
 		node.append('circle')
-			.attr('cx', function(d) {return d.x;})
-			.attr('cy', function(d) {return d.y;})
+			.attr('cx', function(d) {return d.x})
+			.attr('cy', function(d) {return d.y})
 			.attr('fill', '#FFF')
 			.on('click', null)
-			.attr('r', 10);
+			.attr('r', 15)
+			.style('z-index', 5);
 
 		node.append('text')
 			.text(function(d, i) {return d.name;})
+			.attr("transform", function(d) { 
+				return 'translate(' + [20, 0] + ')'; 
+			})
 			.style('fill', '#FFF');
 
 		force_chart.on('tick', function() {
