@@ -8,12 +8,14 @@ var census_text;
 var chart_type = 1;
 var type_text;
 var compressed_data = [];
+var baseball_data = [];
 
 var bin_count;
 var bar_color = '#4682b4'
 var bar_highlight_color = '#00008B'
 var bar_padding = 0.1;
 var bar_height_bulge = 3;
+var isDrag = false;
 
 
 var pie_width = 500;
@@ -77,21 +79,23 @@ function initHistogram() {
 	d3.csv('baseball_data.csv', function(data) {
 
 		// Storing the height/weight/hr data as baseball_data
-		var baseball_data = data.map(function(i) {
-			if (chart_type == 1) {
-				bin_count = 15;
-				census_text = "Baseball players' heights";
-				return parseInt(i.height);
-			} else if (chart_type == 2) {
-				bin_count = 20;
-				census_text = "Baseball players' weights";
-				return parseInt(i.weight);
-			} else if (chart_type == 3) {
-				bin_count = 11;
-				census_text = "Baseball players' heart rates";
-				return parseInt(i.HR);
-			}
-		})
+		if (!isDrag) {
+			baseball_data = data.map(function(i) {
+				if (chart_type == 1) {
+					bin_count = 15;
+					census_text = "Baseball players' heights";
+					return parseInt(i.height);
+				} else if (chart_type == 2) {
+					bin_count = 20;
+					census_text = "Baseball players' weights";
+					return parseInt(i.weight);
+				} else if (chart_type == 3) {
+					bin_count = 11;
+					census_text = "Baseball players' heart rates";
+					return parseInt(i.HR);
+				}
+			})
+		}
 
 		// Making data bins according to the bin_count
 		var hist_bin_data = d3.layout.histogram().bins(bin_count)(baseball_data);
@@ -108,7 +112,7 @@ function initHistogram() {
 		var max = d3.max(hist_bin_data.map(function(i) {
 			return d3.max(i);
 		}));
-
+		
 		var step = (max - min) / bin_count;
 		bar_padding = step*0.1;
 		
@@ -125,12 +129,12 @@ function initHistogram() {
 		var x = d3.scale.linear()
 				.domain([ min, max + 2*step ])
 				.range([ 0, width ]);
-
+				
 		var svg = d3.select('#chart')
 					.append('svg')
 					.attr('id', 'chart_layout')
 					.attr('height', height + padding)
-					.attr('width', width);
+					.attr('width', width)
 
 		var container = svg.append('g').attr('transform', 'translate(50, -15)');
 		
@@ -142,11 +146,40 @@ function initHistogram() {
 				 .attr("transform", "translate(-30," + (height / 2) + ")rotate(-90)")
 				 .style('stroke', '#FFF');
 
+		var x_down_pos;
+		var x_up_pos;
+		
 		d3.select('#chart').on('click', function() {
-			census_type = 2;
-			bartooltip.html('');
-			d3.select('#bartooltip').remove();
-			init_chart();
+			console.log("Tarun", "On click");
+			if (isDrag) {
+				isDrag = false;
+			} else {
+				census_type = 2;
+				bartooltip.html('');
+				d3.select('#bartooltip').remove();
+				init_chart();
+			}
+		})
+		.on('mousedown', function() {
+			x_down_pos = d3.event.pageX;
+			console.log("Tarun", "On mouse down : " + x_down_pos);
+		})
+		.on('mouseup', function() {
+			x_up_pos = d3.event.pageX;
+			console.log("Tarun", "On mouse up : " + d3.event.pageX);
+			if (x_down_pos != x_up_pos) {
+				if (x_down_pos > x_up_pos && bin_count > 1) {
+					console.log("Tarun", "This is a left drag");
+					bin_count--;
+				} else if (x_down_pos < x_up_pos) {
+					console.log("Tarun", "This is a right drag");
+					bin_count++;
+				}
+				
+				isDrag = true;
+				destroy();
+				init_chart();
+			}
 		});	
 		
 		//d3.select('#chart').on('click', null);
@@ -277,25 +310,27 @@ function initPieChart() {
 	d3.csv('baseball_data.csv', function(data) {
 		
 		// Storing the height/weight/hr data as baseball_data
-		var baseball_data = data.map(function(i) {
-			if (chart_type == 1) {
-				bin_count = 15;
-				type_text = "Height";
-				census_text = "Baseball players' heights";
-				return parseInt(i.height);
-			} else if (chart_type == 2) {
-				bin_count = 20;
-				type_text = "Weight";
-				census_text = "Baseball players' weights";
-				return parseInt(i.weight);
-			} else if (chart_type == 3) {
-				bin_count = 11;
-				type_text = "Heart Rate";
-				census_text = "Baseball players' heart rates";
-				return parseInt(i.HR);
-			}
-		})
-
+		if (!isDrag) {
+			baseball_data = data.map(function(i) {
+				if (chart_type == 1) {
+					bin_count = 15;
+					type_text = "Height";
+					census_text = "Baseball players' heights";
+					return parseInt(i.height);
+				} else if (chart_type == 2) {
+					bin_count = 20;
+					type_text = "Weight";
+					census_text = "Baseball players' weights";
+					return parseInt(i.weight);
+				} else if (chart_type == 3) {
+					bin_count = 11;
+					type_text = "Heart Rate";
+					census_text = "Baseball players' heart rates";
+					return parseInt(i.HR);
+				}
+			})
+		}
+		
 		compressed_data = [];
 		
 		var pie_bin_data = d3.layout.histogram().bins(bin_count)(baseball_data);
@@ -383,25 +418,27 @@ function initForceChart() {
 	
 	d3.csv('baseball_data.csv', function(data) {
 		
-		// Storing the height/weight/hr data as baseball_data
-		var baseball_data = data.map(function(i) {
-			if (chart_type == 1) {
-				bin_count = 15;
-				type_text = "Height";
-				census_text = "Baseball players' heights";
-				return parseInt(i.height);
-			} else if (chart_type == 2) {
-				bin_count = 20;
-				type_text = "Weight";
-				census_text = "Baseball players' weights";
-				return parseInt(i.weight);
-			} else if (chart_type == 3) {
-				bin_count = 20;
-				type_text = "Heart Rate";
-				census_text = "Baseball players' heart rates";
-				return parseInt(i.HR);
-			}
-		})
+		if (!isDrag) {
+			// Storing the height/weight/hr data as baseball_data
+			baseball_data = data.map(function(i) {
+				if (chart_type == 1) {
+					bin_count = 15;
+					type_text = "Height";
+					census_text = "Baseball players' heights";
+					return parseInt(i.height);
+				} else if (chart_type == 2) {
+					bin_count = 20;
+					type_text = "Weight";
+					census_text = "Baseball players' weights";
+					return parseInt(i.weight);
+				} else if (chart_type == 3) {
+					bin_count = 20;
+					type_text = "Heart Rate";
+					census_text = "Baseball players' heart rates";
+					return parseInt(i.HR);
+				}
+			})
+		}
 
 		compressed_data = [];
 
