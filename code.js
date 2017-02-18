@@ -170,7 +170,7 @@ function refreshHistogram() {
 						  
 				bartooltip.html(d.y)
 						  .style('left', (d3.event.pageX - 15) + 'px')
-						  .style('top', (height - y(d.y) + 35) + 'px');
+						  .style('top', (height - y(d.y) + 50) + 'px');
 				
 				orig_width = d3.select(this).attr('width');
 				orig_height = d3.select(this).attr('height');
@@ -419,7 +419,7 @@ function initHistogram() {
 						  
 				bartooltip.html(d.y)
 						  .style('left', (d3.event.pageX - 15) + 'px')
-						  .style('top', (height - y(d.y) + 35) + 'px');
+						  .style('top', (height - y(d.y) + 50) + 'px');
 				
 				orig_width = d3.select(this).attr('width');
 				orig_height = d3.select(this).attr('height');
