@@ -1,4 +1,4 @@
-var width = 1000;
+var width = 1100;
 var height = 450;
 var padding = 10;
 
@@ -9,18 +9,29 @@ var chart_type = 1;
 var type_text;
 var compressed_data = [];
 var baseball_data = [];
+var svg;
+var container;
+var bartooltip;
+var units;
+var x_axis;
 
+var height_bin_count = 15;
+var weight_bin_count = 21;
+var hr_bin_count = 11;
 var bin_count;
+
 var bar_color = '#4682b4'
 var bar_highlight_color = '#00008B'
 var bar_padding = 0.1;
 var bar_height_bulge = 3;
 var isDrag = false;
+var isMouseDown = false;
+var last_x_pos;
+var curr_x_pos;
 
-
-var pie_width = 500;
-var pie_height = 500;
-var pie_radius = 250;
+var pie_width = 490;
+var pie_height = 490;
+var pie_radius = 245;
 
 var force_width = 950;
 var force_height = 450;
@@ -60,6 +71,7 @@ function toggle_menu() {
 function reset() {
 	chart_type = 1;
 	census_type = 1;
+	
 	init_chart();
 }
 
@@ -74,41 +86,27 @@ function destroy() {
 	document.getElementById('legend_area').innerHTML = '';
 }
 
-function initHistogram() {
-	
+
+function refreshHistogram() {
 	d3.csv('baseball_data.csv', function(data) {
-
-		// Storing the height/weight/hr data as baseball_data
-		if (!isDrag) {
-			baseball_data = data.map(function(i) {
-				if (chart_type == 1) {
-					bin_count = 15;
-					census_text = "Baseball players' heights";
-					return parseInt(i.height);
-				} else if (chart_type == 2) {
-					bin_count = 20;
-					census_text = "Baseball players' weights";
-					return parseInt(i.weight);
-				} else if (chart_type == 3) {
-					bin_count = 11;
-					census_text = "Baseball players' heart rates";
-					return parseInt(i.HR);
-				}
-			})
-		}
-
-		// Making data bins according to the bin_count
+		
+		if (chart_type == 1) {
+			bin_count = height_bin_count;
+		} else if (chart_type == 2) {
+			bin_count = weight_bin_count;
+		} else {
+			bin_count = hr_bin_count;
+		}		
+		
 		var hist_bin_data = d3.layout.histogram().bins(bin_count)(baseball_data);
-		
+	
 		compressed_data = [];
-		
-		// Getting the minimum height 
+
 		var min = d3.min(hist_bin_data.map(function(i) {
 			compressed_data.push(i.y);
 			return d3.min(i);
 		}));
 		
-		// Getting the maximum height
 		var max = d3.max(hist_bin_data.map(function(i) {
 			return d3.max(i);
 		}));
@@ -116,103 +114,37 @@ function initHistogram() {
 		var step = (max - min) / bin_count;
 		bar_padding = step*0.1;
 		
-		//console.log("Tarun", "Min : " + min);
-		//console.log("Tarun", "Max : " + max);
-		//console.log("Tarun", "Step : " + step);
-		
-		// Setting y range by getting the maximum bar height
 		var y = d3.scale.linear()
 				.domain([0, 20 + d3.max(hist_bin_data.map(function(i) {return i.length;}))])
 				.range([0, height]);
 
-		// Setting x range by getting the minimum and maximu height values
 		var x = d3.scale.linear()
-				.domain([ min, max + 2*step ])
+				.domain([ min, max + step * 0.25])
 				.range([ 0, width ]);
-				
-		var svg = d3.select('#chart')
-					.append('svg')
-					.attr('id', 'chart_layout')
-					.attr('height', height + padding)
-					.attr('width', width)
-
-		var container = svg.append('g').attr('transform', 'translate(50, -15)');
 		
-		// Setting y axis text
-		container.append('text')
-				 .text('Number of people')
-				 .attr('id', 'yaxis_text')
-				 .attr("text-anchor", "middle")
-				 .attr("transform", "translate(-30," + (height / 2) + ")rotate(-90)")
-				 .style('stroke', '#FFF');
-
-		var x_down_pos;
-		var x_up_pos;
+		x_axis = d3.svg.axis()
+		   .scale(x)
+		   .orient('bottom');
 		
-		d3.select('#chart').on('click', function() {
-			console.log("Tarun", "On click");
-			if (isDrag) {
-				isDrag = false;
-			} else {
-				census_type = 2;
-				bartooltip.html('');
-				d3.select('#bartooltip').remove();
-				init_chart();
-			}
-		})
-		.on('mousedown', function() {
-			x_down_pos = d3.event.pageX;
-			console.log("Tarun", "On mouse down : " + x_down_pos);
-		})
-		.on('mouseup', function() {
-			x_up_pos = d3.event.pageX;
-			console.log("Tarun", "On mouse up : " + d3.event.pageX);
-			if (x_down_pos != x_up_pos) {
-				if (x_down_pos > x_up_pos && bin_count > 1) {
-					console.log("Tarun", "This is a left drag");
-					bin_count--;
-				} else if (x_down_pos < x_up_pos) {
-					console.log("Tarun", "This is a right drag");
-					bin_count++;
-				}
-				
-				isDrag = true;
-				destroy();
-				init_chart();
-			}
-		});	
-		
-		//d3.select('#chart').on('click', null);
-		
-		// Making x axis
-		var x_axis = d3.svg.axis()
-					   .scale(x)
-					   .orient('bottom');
-		
-		// Initializing X axis container and appending x-axis
+		d3.select('#group').remove();
 		var group = container.append('g')
+							 .attr('id', 'group')
 							 .attr('transform', 'translate(20,' + height + ')')
 							 .call(x_axis);
 
 		group.selectAll('path').style('fill', 'none').style('stroke', stroke_color);
 		group.selectAll('line').style('stroke', stroke_color);
 		group.selectAll('text').style('stroke', stroke_color);
-
-		// Adding histogram bin data to SVG
-		var units = container.selectAll('.bar').data(hist_bin_data).enter().append('g');
-
-		var bartooltip = d3.select('#chart')
-						   .append('div')
-						   .style('position', 'absolute');
 		
+		svg.selectAll('rect').remove();
+		units = container.selectAll('.bar').data(hist_bin_data).enter().append('g');
+
 		var orig_width;
 		var orig_height
 		var orig_xpos;
 		var orig_ypos;
 		var transition_in_process = true;
 		
-		//console.log("Tarun", units);
-		// Appending rectangles in histogram
 		units.append('rect')
 			 .attr('x', function(d) {return x(d.x + bar_padding) + 20;})
 			 .attr('y', height)
@@ -221,8 +153,13 @@ function initHistogram() {
 			 .attr('margin', 5)
 			 .attr('fill', bar_color)
 			 .on('mouseover', function(d) {
-				if (transition_in_process)
+				if (transition_in_process) {
 					return;
+				}
+				
+				if (isDrag) {
+					return;
+				}
 				
 				// Setting navy blue to the highlighted bar
 				this.style.fill = 'rgb(35, 41, 122)';
@@ -254,8 +191,14 @@ function initHistogram() {
 				});
 			 })
 			 .on('mouseout', function(d) {
-				if (transition_in_process)
+				if (transition_in_process) {
 					return;
+				}
+				
+				if (isDrag) {
+					return;
+				}
+				
 				this.style.fill = bar_color;
 				d3.select(this).attr('x', function(d) {
 					return orig_xpos;
@@ -273,8 +216,257 @@ function initHistogram() {
 				d3.select('#bartooltip').remove();
 			 })
 			 .transition().each('end', function() {transition_in_process = false;})
-			 .duration(1000)
-			 .delay(300)
+			 .duration(0)
+			 .delay(0)
+			 .ease('linear')
+			 .attr('height', function(d) {return y(d.y);})
+			 .attr('y', function(d) {return height - y(d.y);});
+
+		
+		// Creating vertical scale
+		var vert_scale = d3.scale.linear()
+						   .domain([ 20 + d3.max(hist_bin_data.map(function(i) {return i.length;})), 0 ])
+						   .range([ 0, height ]);
+
+		// Creating vertical axis
+		var vert_axis = d3.svg.axis()
+						  .scale(vert_scale)
+						  .orient('left')
+						  .ticks(10);
+
+		d3.select('#vert_guide').remove();
+		//svg.select(vert_guide).remove()
+		var vert_guide = d3.select('svg')
+						   .append('g')
+						   .attr('id', 'vert_guide')
+						   .attr('transform', 'translate(70, -15)')
+						   .call(vert_axis);
+						   
+		vert_guide.selectAll('path').style('fill', 'none').style('stroke', stroke_color);
+		vert_guide.selectAll('line').style('stroke', stroke_color);
+		vert_guide.selectAll('text').style('stroke', stroke_color);
+	});
+}
+
+
+function initHistogram() {
+	
+	d3.csv('baseball_data.csv', function(data) {
+
+		// Storing the height/weight/hr data as baseball_data
+		baseball_data = data.map(function(i) {
+			if (chart_type == 1) {
+				bin_count = height_bin_count;
+				census_text = "Baseball players' heights";
+				return parseInt(i.height);
+			} else if (chart_type == 2) {
+				bin_count = weight_bin_count;
+				census_text = "Baseball players' weights";
+				return parseInt(i.weight);
+			} else if (chart_type == 3) {
+				bin_count = hr_bin_count;
+				census_text = "Baseball players' heart rates";
+				return parseInt(i.HR);
+			}
+		})
+
+		// Making data bins according to the bin_count
+		var hist_bin_data = d3.layout.histogram().bins(bin_count)(baseball_data);
+		
+		compressed_data = [];
+		
+		// Getting the minimum height 
+		var min = d3.min(hist_bin_data.map(function(i) {
+			compressed_data.push(i.y);
+			return d3.min(i);
+		}));
+		
+		// Getting the maximum height
+		var max = d3.max(hist_bin_data.map(function(i) {
+			return d3.max(i);
+		}));
+		
+		var step = (max - min) / bin_count;
+		bar_padding = step*0.1;
+		
+		//console.log("Tarun", "Min : " + min);
+		//console.log("Tarun", "Max : " + max);
+		//console.log("Tarun", "Step : " + step);
+		
+		// Setting y range by getting the maximum bar height
+		var y = d3.scale.linear()
+				.domain([0, 20 + d3.max(hist_bin_data.map(function(i) {return i.length;}))])
+				.range([0, height]);
+
+		// Setting x range by getting the minimum and maximu height values
+		var x = d3.scale.linear()
+				.domain([ min, max + step * 0.25])
+				.range([ 0, width ]);
+				
+		svg = d3.select('#chart')
+					.append('svg')
+					.attr('id', 'chart_layout')
+					.attr('height', height + padding)
+					.attr('width', 1200)
+					.on('mousedown', function(d) {
+						//console.log("Tarun", "Inside mousedown");
+						isMouseDown = true;
+						last_x_pos = d3.event.pageX;
+					})
+					.on('mousemove', function(d) {
+						if (isMouseDown) {
+							isDrag = true;
+							curr_x_pos = d3.event.pageX;
+							//console.log("Tarun", "isMouseDown : " + isMouseDown);
+							if (last_x_pos - curr_x_pos > 100) {
+								if (chart_type == 1 && height_bin_count > 1) {
+									height_bin_count--;
+								} else if (chart_type == 2 && weight_bin_count > 1) {
+									weight_bin_count--;
+								} else if (chart_type == 3 && hr_bin_count > 1){
+									hr_bin_count--;
+								}
+								last_x_pos = curr_x_pos;
+								refreshHistogram();
+							} else if (last_x_pos - curr_x_pos < -100) {
+								if (chart_type == 1) {
+									height_bin_count++;
+								} else if (chart_type == 2) {
+									weight_bin_count++;
+								} else if (chart_type == 3) {
+									hr_bin_count++;
+								}
+								last_x_pos = curr_x_pos;
+								refreshHistogram();
+							}
+						}
+					})
+					.on('mouseup', function(d) {
+						isMouseDown = false;
+					})
+					.on('click', function() {
+						if (!isDrag) {
+							census_type = 2;
+							init_chart();
+						} else {
+							isMouseDown = false;
+							isDrag = false;
+						}
+					})
+
+		container = svg.append('g').attr('transform', 'translate(50, -15)');
+		
+		// Setting y axis text
+		container.append('text')
+				 .text('Number of people')
+				 .attr('id', 'yaxis_text')
+				 .attr("text-anchor", "middle")
+				 .attr("transform", "translate(-30," + (height / 2) + ")rotate(-90)")
+				 .style('stroke', '#FFF');
+		
+		// Making x axis
+		x_axis = d3.svg.axis()
+					   .scale(x)
+					   .orient('bottom');
+		
+		// Initializing X axis container and appending x-axis
+		var group = container.append('g')
+							 .attr('id', 'group')
+							 .attr('transform', 'translate(20,' + height + ')')
+							 .call(x_axis);
+
+		group.selectAll('path').style('fill', 'none').style('stroke', stroke_color);
+		group.selectAll('line').style('stroke', stroke_color);
+		group.selectAll('text').style('stroke', stroke_color);
+
+		// Adding histogram bin data to SVG
+		units = container.selectAll('.bar').data(hist_bin_data).enter().append('g');
+
+		bartooltip = d3.select('#chart')
+						   .append('div')
+						   .style('position', 'absolute');
+		
+		var orig_width;
+		var orig_height
+		var orig_xpos;
+		var orig_ypos;
+		var transition_in_process = true;
+		
+		//console.log("Tarun", units);
+		// Appending rectangles in histogram
+		units.append('rect')
+			 .attr('x', function(d) {return x(d.x + bar_padding) + 20;})
+			 .attr('y', height)
+			 .attr('width', function(d) {return x(min + d.dx - bar_padding*2);})
+			 .attr('height', 0)
+			 .attr('margin', 5)
+			 .attr('fill', bar_color)
+			 .on('mouseover', function(d) {
+				if (transition_in_process) {
+					return;
+				}
+				
+				if (isDrag) {
+					return;
+				}
+				
+				// Setting navy blue to the highlighted bar
+				this.style.fill = 'rgb(35, 41, 122)';
+				
+				bartooltip.transition()
+						  .style('font-family', 'verdana')
+						  .style('color', stroke_color);
+						  
+				bartooltip.html(d.y)
+						  .style('left', (d3.event.pageX - 15) + 'px')
+						  .style('top', (height - y(d.y) + 35) + 'px');
+				
+				orig_width = d3.select(this).attr('width');
+				orig_height = d3.select(this).attr('height');
+				orig_xpos = d3.select(this).attr('x');
+				orig_ypos = d3.select(this).attr('y');
+				
+				d3.select(this).attr('x', function(d) {
+					return x(d.x - bar_padding/2) + 20;
+				});
+				d3.select(this).attr('width', function(d) {
+					return x(min + d.dx + bar_padding);
+				})
+				d3.select(this).attr('y', function(d) {
+					return height - y(d.y) - bar_height_bulge;
+				});
+				d3.select(this).attr('height', function(d) {
+					return y(d.y) + bar_height_bulge;
+				});
+			 })
+			 .on('mouseout', function(d) {
+				if (transition_in_process) {
+					return;
+				}
+
+				if (isDrag) {
+					return;
+				}
+				
+				this.style.fill = bar_color;
+				d3.select(this).attr('x', function(d) {
+					return orig_xpos;
+				});
+				d3.select(this).attr('width', function(d) {
+					return orig_width;
+				})
+				d3.select(this).attr('y', function(d) {
+					return orig_ypos;
+				});
+				d3.select(this).attr('height', function(d) {
+					return orig_height;
+				});
+				bartooltip.html('');
+				d3.select('#bartooltip').remove();
+			 })
+			 .transition().each('end', function() {transition_in_process = false;})
+			 .duration(0)
+			 .delay(0)
 			 .ease('linear')
 			 .attr('height', function(d) {return y(d.y);})
 			 .attr('y', function(d) {return height - y(d.y);});
@@ -293,6 +485,7 @@ function initHistogram() {
 		// 
 		var vert_guide = d3.select('svg')
 						   .append('g')
+						   .attr('id', 'vert_guide')
 						   .attr('transform', 'translate(70, -15)')
 						   .call(vert_axis);
 
@@ -310,26 +503,24 @@ function initPieChart() {
 	d3.csv('baseball_data.csv', function(data) {
 		
 		// Storing the height/weight/hr data as baseball_data
-		if (!isDrag) {
-			baseball_data = data.map(function(i) {
-				if (chart_type == 1) {
-					bin_count = 15;
-					type_text = "Height";
-					census_text = "Baseball players' heights";
-					return parseInt(i.height);
-				} else if (chart_type == 2) {
-					bin_count = 20;
-					type_text = "Weight";
-					census_text = "Baseball players' weights";
-					return parseInt(i.weight);
-				} else if (chart_type == 3) {
-					bin_count = 11;
-					type_text = "Heart Rate";
-					census_text = "Baseball players' heart rates";
-					return parseInt(i.HR);
-				}
-			})
-		}
+		baseball_data = data.map(function(i) {
+			if (chart_type == 1) {
+				bin_count = height_bin_count;
+				type_text = "Height";
+				census_text = "Baseball players' heights";
+				return parseInt(i.height);
+			} else if (chart_type == 2) {
+				bin_count = weight_bin_count;
+				type_text = "Weight";
+				census_text = "Baseball players' weights";
+				return parseInt(i.weight);
+			} else if (chart_type == 3) {
+				bin_count = hr_bin_count;
+				type_text = "Heart Rate";
+				census_text = "Baseball players' heart rates";
+				return parseInt(i.HR);
+			}
+		})
 		
 		compressed_data = [];
 		
@@ -375,13 +566,14 @@ function initPieChart() {
 			init_chart();
 		});
 		
-		var svg = d3.select('#chart')
+		svg = d3.select('#chart')
 					.append('svg')
 					.attr('id', 'piechart_layout')
-					.attr('width', pie_width + 50)
-					.attr('height', pie_height);
+					.attr('width', pie_width)
+					.attr('height', pie_height)
+					.style('margin-left', '230px');
 
-		var container = svg.append('g')
+		container = svg.append('g')
 						   .attr('transform', 'translate(' + (pie_width-pie_radius) + ', ' + (pie_height-pie_radius) + ')');
 
 		container.selectAll('path')
@@ -418,27 +610,25 @@ function initForceChart() {
 	
 	d3.csv('baseball_data.csv', function(data) {
 		
-		if (!isDrag) {
-			// Storing the height/weight/hr data as baseball_data
-			baseball_data = data.map(function(i) {
-				if (chart_type == 1) {
-					bin_count = 15;
-					type_text = "Height";
-					census_text = "Baseball players' heights";
-					return parseInt(i.height);
-				} else if (chart_type == 2) {
-					bin_count = 20;
-					type_text = "Weight";
-					census_text = "Baseball players' weights";
-					return parseInt(i.weight);
-				} else if (chart_type == 3) {
-					bin_count = 20;
-					type_text = "Heart Rate";
-					census_text = "Baseball players' heart rates";
-					return parseInt(i.HR);
-				}
-			})
-		}
+		// Storing the height/weight/hr data as baseball_data
+		baseball_data = data.map(function(i) {
+			if (chart_type == 1) {
+				bin_count = height_bin_count;
+				type_text = "Height";
+				census_text = "Baseball players' heights";
+				return parseInt(i.height);
+			} else if (chart_type == 2) {
+				bin_count = weight_bin_count;
+				type_text = "Weight";
+				census_text = "Baseball players' weights";
+				return parseInt(i.weight);
+			} else if (chart_type == 3) {
+				bin_count = hr_bin_count;
+				type_text = "Heart Rate";
+				census_text = "Baseball players' heart rates";
+				return parseInt(i.HR);
+			}
+		})
 
 		compressed_data = [];
 
@@ -502,7 +692,7 @@ function initForceChart() {
 							.alpha(0.1)
 							.size([force_width, force_height]);
 
-		var container = d3.select('#chart')
+		container = d3.select('#chart')
 						  .on('click', null)
 						  .append('svg')
 						  .attr('id', 'forcechart_layout')
