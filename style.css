@@ -50,6 +50,10 @@ body {
 	background-repeat: no-repeat;
 }
 
+.menu_text {
+	color: #FFFFFF;
+}
+
 .reset_button {
 	width: 100px;
 	height: 33px;

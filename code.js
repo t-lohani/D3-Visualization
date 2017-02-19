@@ -21,7 +21,7 @@ var hr_bin_count = 11;
 var bin_count;
 
 var bar_color = '#4682b4'
-var bar_highlight_color = '#00008B'
+var bar_highlight_color = '#FF00FF'
 var bar_padding = 0.1;
 var bar_height_bulge = 3;
 var isDrag = false;
@@ -69,9 +69,17 @@ function toggle_menu() {
 }
 
 function reset() {
-	chart_type = 1;
 	census_type = 1;
-	
+	d3.select('#chart').on('click', function() {
+		if (!isDrag) {
+			console.log("Tarun", "Onclick reset");
+			census_type = 2;
+			
+		} else {
+			isMouseDown = false;
+			isDrag = false;
+		}
+	});
 	init_chart();
 }
 
@@ -89,7 +97,6 @@ function destroy() {
 
 function refreshHistogram() {
 	d3.csv('baseball_data.csv', function(data) {
-		
 		if (chart_type == 1) {
 			bin_count = height_bin_count;
 		} else if (chart_type == 2) {
@@ -124,7 +131,8 @@ function refreshHistogram() {
 		
 		x_axis = d3.svg.axis()
 		   .scale(x)
-		   .orient('bottom');
+		   .orient('bottom')
+		   .ticks(bin_count);
 		
 		d3.select('#group').remove();
 		var group = container.append('g')
@@ -162,7 +170,7 @@ function refreshHistogram() {
 				}
 				
 				// Setting navy blue to the highlighted bar
-				this.style.fill = 'rgb(35, 41, 122)';
+				this.style.fill = 'rgb(206, 11, 41)';
 				
 				bartooltip.transition()
 						  .style('font-family', 'verdana')
@@ -287,7 +295,7 @@ function initHistogram() {
 		}));
 		
 		var step = (max - min) / bin_count;
-		bar_padding = step*0.1;
+		bar_padding = step * 0.1;
 		
 		//console.log("Tarun", "Min : " + min);
 		//console.log("Tarun", "Max : " + max);
@@ -346,19 +354,20 @@ function initHistogram() {
 					})
 					.on('click', function() {
 						if (!isDrag) {
+							//console.log("Tarun", "Onclick");
 							census_type = 2;
 							init_chart();
 						} else {
 							isMouseDown = false;
 							isDrag = false;
 						}
-					})
+					});
 
 		container = svg.append('g').attr('transform', 'translate(50, -15)');
 		
 		// Setting y axis text
 		container.append('text')
-				 .text('Number of people')
+				 .text('Count of players')
 				 .attr('id', 'yaxis_text')
 				 .attr("text-anchor", "middle")
 				 .attr("transform", "translate(-30," + (height / 2) + ")rotate(-90)")
@@ -367,7 +376,8 @@ function initHistogram() {
 		// Making x axis
 		x_axis = d3.svg.axis()
 					   .scale(x)
-					   .orient('bottom');
+					   .orient('bottom')
+					   .ticks(bin_count);
 		
 		// Initializing X axis container and appending x-axis
 		var group = container.append('g')
@@ -411,7 +421,7 @@ function initHistogram() {
 				}
 				
 				// Setting navy blue to the highlighted bar
-				this.style.fill = 'rgb(35, 41, 122)';
+				this.style.fill = 'rgb(206, 11, 41)';
 				
 				bartooltip.transition()
 						  .style('font-family', 'verdana')
@@ -562,6 +572,7 @@ function initPieChart() {
 		var pie_chart = d3.layout.pie().value(function(d) {return d;});
 
 		d3.select('#chart').on('click', function() {
+			//console.log("Tarun", "Onclick pie");
 			census_type = 3;
 			init_chart();
 		});
@@ -597,7 +608,7 @@ function initPieChart() {
 		  .append('text')
 		  .text(function(d, i) {return d.data;})
 		  .attr('transform', function(d) {return 'translate(' + arc.centroid(d) + ')';})
-		  .style('fill', '#FFF')
+		  .style('fill', '#000')
 		  .style('text-anchor', 'middle')
 		  .style('font-family', 'verdana');
 
@@ -609,7 +620,7 @@ function initPieChart() {
 function initForceChart() {
 	
 	d3.csv('baseball_data.csv', function(data) {
-		
+		console.log("Tarun", "initForceChart");
 		// Storing the height/weight/hr data as baseball_data
 		baseball_data = data.map(function(i) {
 			if (chart_type == 1) {
